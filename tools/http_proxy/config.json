@@ -1,0 +1,12 @@
+{
+    "name": "pac",
+    "proxy": {
+        "host": "127.0.0.1",
+        "port": 8080
+    },    
+    "pac": {
+        "host": "xxx.com",
+        "port": 80,
+        "path": "/xxx.pac"
+    }
+}

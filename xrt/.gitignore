@@ -1,0 +1,8 @@
+.DS_Store
+*.pyc
+*.dll
+*.lib
+*.exe
+*.log
+*.obj
+out/
