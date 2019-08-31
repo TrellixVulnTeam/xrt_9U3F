@@ -21,7 +21,6 @@
 import("//build/buildflag_header.gni")
 import("//build/config/allocator.gni")
 import("//build/config/compiler/compiler.gni")
-import("//build/config/sysroot.gni")
 import("//build/config/ui.gni")
 import("//build/timestamp.gni")
 
@@ -868,8 +867,8 @@ component("base") {
     ":debugging_flags",
   ]
 
-  # Needed for <atomic> if using newer C++ library than sysroot
-  if (!use_sysroot && is_linux) {
+  # Needed for <atomic> if using newer C++ library
+  if (is_linux) {
     libs = [ "atomic" ]
   }
 

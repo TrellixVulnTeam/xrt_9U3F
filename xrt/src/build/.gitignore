@@ -23,3 +23,5 @@ ciopfs
 /mac_files
 
 !/util/LASTCHANGE.dummy
+!/util/LASTCHANGE.committime
+!/util/LASTCHANGE
