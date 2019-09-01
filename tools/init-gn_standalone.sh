@@ -1,7 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 set -v
+
+export http_proxy=127.0.0.1:8080
+export https_proxy=127.0.0.1:8080
 
 mkdir gn_standalone
 cd gn_standalone
@@ -15,5 +18,5 @@ git clone https://chromium.googlesource.com/chromium/src/build
 git clone https://chromium.googlesource.com/chromium/src/build/config
 mkdir testing
 cd testing
-git clone https://chromium.googlesource.com/chromium/testing
+git clone https://chromium.googlesource.com/chromium/testing/gtest
 cd ..

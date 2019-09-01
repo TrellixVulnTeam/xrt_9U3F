@@ -8,18 +8,24 @@ on() {
   PORT=$(cat ${FILE_PATH} | ${JQ_EXEC} .proxy.port | sed 's/\"//g')
   PROXY=${HOST}:${PORT}
 
-  git config --global http.proxy http://${PROXY}
-  git config --global https.proxy https://${PROXY}
+  export proxy=${PROXY}
+  export http_proxy=${PROXY}
+  export https_proxy=${PROXY}
+  export ftp_proxy=${PROXY}
 }
 
 off() {
-  git config --global --unset http.proxy
-  git config --global --unset https.proxy
+  unset proxy
+  unset http_proxy
+  unset https_proxy
+  unset ftp_proxy
 }
 
 status() {
-  git config --global --get http.proxy
-  git config --global --get https.proxy
+  echo proxy=${proxy}
+  echo http_proxy=${http_proxy}
+  echo https_proxy=${https_proxy}
+  echo ftp_proxy=${ftp_proxy}
 }
 
 main() {

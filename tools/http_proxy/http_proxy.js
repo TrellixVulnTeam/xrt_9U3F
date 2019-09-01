@@ -8,12 +8,12 @@ var dns = require('dns');
 var config_json = './config.json';
 if (process.argv.length > 2) {
     config_json = process.argv[2];
-    config_json = './' + config_json + '.json';
+    config_json = './' + config_json;
 }
 
 var config = require(config_json);
 
-function parseHostAndPort(url){
+function parseHostAndPort(url) {
     var urlInfo = $url.parse(url);
     return {
         host: urlInfo.hostname,
@@ -25,30 +25,29 @@ http.get({
     host: config.pac.host,
     port: config.pac.port,
     path: config.pac.path
-}, function (res){
+}, function (res) {
     var buff = [];
-    res.on('data', function (chunk){
+    res.on('data', function (chunk) {
         buff.push(chunk);
     });
-    res.on('end', function (){
+    res.on('end', function () {
         pacGot(buff.join(''));
     });
 });
 
 var fnPac;
-function pacGot(code){
+function pacGot(code) {
     fnPac = new Function('dnsResolve', 'shExpMatch', 'isInNet',
         code + ';return FindProxyForURL;')(dnsResolve, shExpMatch, isInNet);
 }
-// 杩欓噷鎳掑緱鍘绘壘閫氱敤鐨勪簡, 鑳′贡鍐欎簡涓�.
-function Deferred(){
+function Deferred() {
     this._callbacks = [];
 }
 Deferred.prototype = {
-    then: function (callback){
+    then: function (callback) {
         this._callbacks.push(callback);
     },
-    done: function (value){
+    done: function (value) {
         var callback;
         while (callback = this._callbacks.shift()) {
             callback(value);
@@ -57,11 +56,11 @@ Deferred.prototype = {
 };
 var dnsCache = {};
 var dnsDfds = {};
-function dnsResolve(host){
+function dnsResolve(host) {
     if (!dnsCache[host]) {
         if (!dnsDfds[host]) {
             dnsDfds[host] = new Deferred();
-            dns.resolve(host, function (err, address){
+            dns.resolve(host, function (err, address) {
                 dnsCache[host] = err ? '127.0.0.1' : address[0];
                 dnsDfds[host].done(dnsCache[host]);
             });
@@ -81,8 +80,8 @@ function localHostOrDomainIs(host, hostdom) {
     return (host == hostdom) ||
         (hostdom.lastIndexOf(host + '.', 0) == 0);
 }
-function shExpMatch(text, exp){
-    exp = exp.replace(/\.|\*|\?/g, function (m){
+function shExpMatch(text, exp) {
+    exp = exp.replace(/\.|\*|\?/g, function (m) {
         if (m === '.') {
             return '\\.';
         } else if (m === '*') {
@@ -98,13 +97,13 @@ function dnsDomainIs(host, domain) {
         host.substring(host.length - domain.length) == domain);
 }
 function dnsDomainLevels(host) {
-    return host.split('.').length-1;
+    return host.split('.').length - 1;
 }
 function convert_addr(ipchars) {
     var bytes = ipchars.split('.');
     return ((bytes[0] & 0xff) << 24) |
         ((bytes[1] & 0xff) << 16) |
-        ((bytes[2] & 0xff) <<  8) |
+        ((bytes[2] & 0xff) << 8) |
         (bytes[3] & 0xff);
 }
 function isInNet(ipaddr, pattern, maskstr) {
@@ -114,16 +113,16 @@ function isInNet(ipaddr, pattern, maskstr) {
         return false;    // not an IP address
     }
     var host = convert_addr(ipaddr);
-    var pat  = convert_addr(pattern);
+    var pat = convert_addr(pattern);
     var mask = convert_addr(maskstr);
     return ((host & mask) == (pat & mask));
 }
-function pac(url, callback){
+function pac(url, callback) {
     var hostAndPort = parseHostAndPort(url);
-    function tryPac(){
+    function tryPac() {
         try {
             callback(fnPac(url, hostAndPort.host));
-        } catch(ex) {
+        } catch (ex) {
             if (ex instanceof Deferred) {
                 ex.then(tryPac);
             } else {
@@ -133,13 +132,13 @@ function pac(url, callback){
     }
     tryPac();
 }
-function getProxyHostAndPort(url, callback){
+function getProxyHostAndPort(url, callback) {
     var hostAndPort = parseHostAndPort(url);
     var isHttps = url.indexOf('https:') !== -1;
     if (!fnPac) {
         callback(hostAndPort);
     } else {
-        pac(url, function (str){
+        pac(url, function (str) {
             var p = str.split(/\s*;\s*/g)[0];
             if (p.indexOf('PROXY') !== -1) {
                 var m = /PROXY\s*([^:]+)(?::(\d+))?/.exec(p);
@@ -148,27 +147,25 @@ function getProxyHostAndPort(url, callback){
                     port: !isHttps ? Number(m[2]) || 8080 : 443
                 };
             }
-                
+
             callback(hostAndPort);
         });
     }
 }
-net.createServer(function (clientSocket){
-    clientSocket.once('data', function (chunk){
+net.createServer(function (clientSocket) {
+    clientSocket.once('data', function (chunk) {
         console.log('===========================begin===================================');
         console.log(chunk.toString());
-        // 瑙ｆ瀽http鍗忚��澶�
         var url = /[A-Z]+\s+([^\s]+)\s+HTTP/.exec(chunk)[1];
         if (url.indexOf('//') === -1) {
-            // https鍗忚��浜ょ粰pac鑴氭湰浼氬緱鍒伴敊璇�鐨勭��鍙�.
             url = 'http://' + url;
         }
-        getProxyHostAndPort(url, function (hostAndPort){
-            var serverSocket = net.connect(hostAndPort.port, hostAndPort.host, function() {
+        getProxyHostAndPort(url, function (hostAndPort) {
+            var serverSocket = net.connect(hostAndPort.port, hostAndPort.host, function () {
                 clientSocket.pipe(serverSocket);
                 serverSocket.write(chunk);
                 serverSocket.pipe(clientSocket);
-                serverSocket.on('end', function() {
+                serverSocket.on('end', function () {
                     clientSocket.end();
                     console.log('=============================end===================================');
                 });
@@ -177,4 +174,4 @@ net.createServer(function (clientSocket){
     });
 }).listen(config.proxy.port, config.proxy.host);
 
-console.log("pac-proxy server: %s started at: %s:%d",config.name, config.proxy.host, config.proxy.port);
+console.log("http proxy server: %s started at: %s:%d", config.name, config.proxy.host, config.proxy.port);

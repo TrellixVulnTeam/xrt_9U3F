@@ -1,1 +1,1 @@
-call node pac_proxy.js %1
+call node http_proxy.js %1

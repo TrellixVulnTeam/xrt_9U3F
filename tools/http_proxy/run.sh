@@ -1,1 +1,1 @@
-nohup node pac_proxy.js $1 >/dev/null 2>&1 &
+nohup node http_proxy.js $1 >/dev/null 2>&1 &
